@@ -46,8 +46,8 @@ export function scanReceipt(imageBase64: string, mediaType = "image/jpeg") {
   return post<Receipt>("/api/receipt", { imageBase64, mediaType });
 }
 
-export function fetchInsights(receipts: StoredReceipt[]) {
+export function fetchInsights(receipts: StoredReceipt[], monthlyBudget: number, monthLabel: string) {
   // Strip local-only fields before sending.
-  const slim = receipts.map(({ id, imageUri, scannedAt, ...r }) => r);
-  return post<Insights>("/api/insights", { receipts: slim });
+  const slim = receipts.map(({ id, scannedAt, source, ...r }) => r);
+  return post<Insights>("/api/insights", { receipts: slim, monthlyBudget, month: monthLabel });
 }

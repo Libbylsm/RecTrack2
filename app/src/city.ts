@@ -113,8 +113,8 @@ export function money(amount: number, currency = "GBP") {
 }
 
 export function skyColors(health: number): [string, string] {
-  if (health >= 75) return ["#8EC5FF", "#E0F2FF"]; // clear blue
-  if (health >= 50) return ["#A9C1D9", "#E8EEF3"]; // hazy
-  if (health >= 25) return ["#A39E93", "#D9D4C7"]; // smoggy
-  return ["#6B6560", "#A8A29A"]; // choking
+  if (health >= 75) return ["#3B6FD8", "#6C5CE7"]; // clear twilight blue -> violet
+  if (health >= 50) return ["#4A5A7A", "#6B5F8F"]; // hazy
+  if (health >= 25) return ["#5E554A", "#6E6253"]; // smoggy brown
+  return ["#3A3532", "#554C45"]; // choking
 }

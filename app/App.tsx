@@ -2,87 +2,153 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import CityScreen from "./src/screens/CityScreen";
+import { Ionicons } from "@expo/vector-icons";
+import { loadSession, signOut, updateUser, User } from "./src/auth";
+import { currentMonthKey } from "./src/month";
+import HomeScreen from "./src/screens/HomeScreen";
 import ScanScreen from "./src/screens/ScanScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
-import { loadInsights, loadReceipts, saveInsights, saveReceipts } from "./src/storage";
+import HistoryScreen from "./src/screens/HistoryScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import LoginScreen from "./src/screens/LoginScreen";
+import OnboardingScreen from "./src/screens/OnboardingScreen";
+import { InsightsByMonth, loadInsights, loadReceipts, saveInsights, saveReceipts } from "./src/storage";
 import { C } from "./src/theme";
-import type { Insights, StoredReceipt } from "./src/types";
+import type { StoredReceipt } from "./src/types";
 
-type Tab = "city" | "scan" | "insights";
-const TABS: { key: Tab; icon: string; label: string }[] = [
-  { key: "city", icon: "🏙️", label: "City" },
-  { key: "scan", icon: "🧾", label: "Scan" },
-  { key: "insights", icon: "📊", label: "Insights" },
+type Tab = "home" | "insights" | "scan" | "history" | "profile";
+const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof typeof Ionicons.glyphMap; label: string }[] = [
+  { key: "home", icon: "home-outline", iconOn: "home", label: "Home" },
+  { key: "insights", icon: "stats-chart-outline", iconOn: "stats-chart", label: "Insights" },
+  { key: "scan", icon: "scan", iconOn: "scan", label: "Scan" },
+  { key: "history", icon: "time-outline", iconOn: "time", label: "History" },
+  { key: "profile", icon: "person-outline", iconOn: "person", label: "Profile" },
 ];
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("scan");
+  const [booting, setBooting] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [tab, setTab] = useState<Tab>("home");
   const [receipts, setReceipts] = useState<StoredReceipt[]>([]);
-  const [insights, setInsights] = useState<Insights | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [insights, setInsights] = useState<InsightsByMonth>({});
 
   useEffect(() => {
-    (async () => {
-      const [r, i] = await Promise.all([loadReceipts(), loadInsights()]);
-      setReceipts(r);
-      setInsights(i);
-      if (r.length) setTab("city");
-      setLoaded(true);
-    })();
+    loadSession().then((u) => {
+      setUser(u);
+      setBooting(false);
+    });
   }, []);
 
-  function updateReceipts(next: StoredReceipt[]) {
-    setReceipts(next);
-    saveReceipts(next);
-    // Spending changed, so old insights are stale.
-    setInsights(null);
-    saveInsights(null);
-  }
+  // Load this user's data whenever the signed-in user changes.
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([loadReceipts(user.id), loadInsights(user.id)]).then(([r, i]) => {
+      setReceipts(r);
+      setInsights(i);
+    });
+  }, [user?.id]);
 
-  function updateInsights(i: Insights) {
-    setInsights(i);
-    saveInsights(i);
-  }
+  if (booting) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
 
-  if (!loaded) return null;
+  const content = (() => {
+    if (!user) return <LoginScreen onSignedIn={(u) => { setUser(u); setTab("home"); }} />;
+    if (!user.name || !user.monthlyBudget) {
+      return <OnboardingScreen user={user} onDone={async (u) => setUser(await updateUser(u))} />;
+    }
 
-  return (
-    <SafeAreaProvider>
+    const updateReceipts = (next: StoredReceipt[]) => {
+      setReceipts(next);
+      saveReceipts(user.id, next);
+      // This month's spending changed, so its AI insights are stale.
+      const { [currentMonthKey()]: _, ...rest } = insights;
+      setInsights(rest);
+      saveInsights(user.id, rest);
+    };
+
+    return (
       <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={["top"]}>
-        <StatusBar style="dark" />
         <View style={{ flex: 1 }}>
-          {tab === "city" && <CityScreen receipts={receipts} />}
+          {tab === "home" && <HomeScreen user={user} receipts={receipts} goTo={setTab} />}
           {tab === "scan" && (
             <ScanScreen
               receipts={receipts}
-              onAdd={(r) => updateReceipts([...receipts, r])}
-              onAddMany={(rs) => updateReceipts([...receipts, ...rs])}
+              onAdd={(rs) => updateReceipts([...receipts, ...rs])}
               onDelete={(id) => updateReceipts(receipts.filter((r) => r.id !== id))}
-              onReset={() => updateReceipts([])}
-              goToCity={() => setTab("city")}
+              goHome={() => setTab("home")}
             />
           )}
           {tab === "insights" && (
-            <InsightsScreen receipts={receipts} insights={insights} onInsights={updateInsights} />
+            <InsightsScreen
+              user={user}
+              receipts={receipts}
+              insights={insights[currentMonthKey()] ?? null}
+              onInsights={(i) => {
+                const next = { ...insights, [currentMonthKey()]: i };
+                setInsights(next);
+                saveInsights(user.id, next);
+              }}
+            />
+          )}
+          {tab === "history" && <HistoryScreen user={user} receipts={receipts} insights={insights} />}
+          {tab === "profile" && (
+            <ProfileScreen
+              user={user}
+              receipts={receipts}
+              onUpdateUser={async (u) => setUser(await updateUser(u))}
+              onSignOut={async () => {
+                await signOut();
+                setUser(null);
+                setReceipts([]);
+                setInsights({});
+              }}
+              onResetData={() => {
+                setReceipts([]);
+                setInsights({});
+                saveReceipts(user.id, []);
+                saveInsights(user.id, {});
+              }}
+            />
           )}
         </View>
+
         <SafeAreaView edges={["bottom"]} style={styles.tabBar}>
-          {TABS.map((t) => (
-            <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
-              <Text style={[styles.tabIcon, { opacity: tab === t.key ? 1 : 0.45 }]}>{t.icon}</Text>
-              <Text style={[styles.tabLabel, tab === t.key && { color: C.accent }]}>{t.label}</Text>
-            </Pressable>
-          ))}
+          {TABS.map((t) =>
+            t.key === "scan" ? (
+              <Pressable key={t.key} style={styles.tab} onPress={() => setTab("scan")}>
+                <View style={[styles.scanBtn, tab === "scan" && { transform: [{ scale: 1.05 }] }]}>
+                  <Ionicons name="scan" size={26} color={C.limeInk} />
+                </View>
+              </Pressable>
+            ) : (
+              <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
+                <Ionicons name={tab === t.key ? t.iconOn : t.icon} size={23} color={tab === t.key ? C.lime : C.dim} />
+                <Text style={[styles.tabLabel, tab === t.key && { color: C.lime }]}>{t.label}</Text>
+              </Pressable>
+            ),
+          )}
         </SafeAreaView>
       </SafeAreaView>
+    );
+  })();
+
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="light" />
+      {content}
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  tabBar: { flexDirection: "row", borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.card },
-  tab: { flex: 1, alignItems: "center", paddingTop: 8, paddingBottom: 4 },
-  tabIcon: { fontSize: 22 },
-  tabLabel: { fontSize: 11, fontWeight: "700", color: C.muted, marginTop: 2 },
+  tabBar: {
+    flexDirection: "row", alignItems: "center", backgroundColor: "#121318",
+    borderTopWidth: 1, borderTopColor: C.line, paddingTop: 6,
+  },
+  tab: { flex: 1, alignItems: "center", paddingBottom: 4 },
+  tabLabel: { fontSize: 10, fontWeight: "700", color: C.dim, marginTop: 3 },
+  scanBtn: {
+    width: 58, height: 58, borderRadius: 20, backgroundColor: C.lime, alignItems: "center", justifyContent: "center",
+    marginTop: -26, borderWidth: 4, borderColor: C.bg,
+    shadowColor: C.lime, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
+  },
 });

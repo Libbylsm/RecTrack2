@@ -1,15 +1,11 @@
-import type { Insights, StoredReceipt } from "./types";
+import type { Insights, ReceiptItem, StoredReceipt } from "./types";
 
-const now = Date.now();
-const day = 86_400_000;
+type Template = { merchant: string; savings: number; payment: string; fact: string; items: ReceiptItem[] };
 
-/** Pre-parsed receipts so the demo works even without a camera or network. */
-export const SAMPLE_RECEIPTS: StoredReceipt[] = [
-  {
-    id: "sample-1", scannedAt: now - 6 * day, is_receipt: true,
-    merchant: "Tesco Express", date: "2026-11-08", currency: "GBP", total: 23.85, savings: 3.1,
-    payment_method: "contactless",
-    fun_fact: "You bought three different kinds of crisps in one trip. Bold.",
+const T: Record<string, Template> = {
+  tesco: {
+    merchant: "Tesco Express", savings: 3.1, payment: "contactless",
+    fact: "You bought three different kinds of crisps in one trip. Bold.",
     items: [
       { name: "Semi-skimmed milk 2L", quantity: 1, price: 1.65, category: "groceries", necessity: "essential" },
       { name: "Wholemeal bread", quantity: 1, price: 1.4, category: "groceries", necessity: "essential" },
@@ -21,43 +17,35 @@ export const SAMPLE_RECEIPTS: StoredReceipt[] = [
       { name: "Energy drink", quantity: 2, price: 4.8, category: "groceries", necessity: "impulse" },
     ],
   },
-  {
-    id: "sample-2", scannedAt: now - 4 * day, is_receipt: true,
-    merchant: "Pret A Manger", date: "2026-11-10", currency: "GBP", total: 14.6, savings: 0,
-    payment_method: "card",
-    fun_fact: "Two flat whites before 9am - your Restaurant Row is fuelled by caffeine.",
+  pret: {
+    merchant: "Pret A Manger", savings: 0, payment: "card",
+    fact: "Two flat whites before 9am - your Restaurant Row runs on caffeine.",
     items: [
       { name: "Flat white", quantity: 2, price: 7.3, category: "dining", necessity: "nice_to_have" },
       { name: "Chicken avocado sandwich", quantity: 1, price: 4.95, category: "dining", necessity: "nice_to_have" },
       { name: "Cookie", quantity: 1, price: 2.35, category: "dining", necessity: "impulse" },
     ],
   },
-  {
-    id: "sample-3", scannedAt: now - 3 * day, is_receipt: true,
-    merchant: "Trainline", date: "2026-11-11", currency: "GBP", total: 31.4, savings: 10.45,
-    payment_method: "card",
-    fun_fact: "Your railcard saved you a third - the Transit Network salutes you.",
+  train: {
+    merchant: "Trainline", savings: 10.45, payment: "card",
+    fact: "Your railcard saved you a third - the Transit Network salutes you.",
     items: [
-      { name: "Durham -> Newcastle return (railcard)", quantity: 1, price: 9.4, category: "transport", necessity: "essential" },
-      { name: "Durham -> York off-peak return", quantity: 1, price: 22.0, category: "transport", necessity: "essential" },
+      { name: "Durham to Newcastle return (railcard)", quantity: 1, price: 9.4, category: "transport", necessity: "essential" },
+      { name: "Durham to York off-peak return", quantity: 1, price: 22.0, category: "transport", necessity: "essential" },
     ],
   },
-  {
-    id: "sample-4", scannedAt: now - 2 * day, is_receipt: true,
-    merchant: "Odeon Cinema", date: "2026-11-12", currency: "GBP", total: 27.5, savings: 0,
-    payment_method: "card",
-    fun_fact: "The large popcorn cost more than the ticket. Classic.",
+  odeon: {
+    merchant: "Odeon Cinema", savings: 0, payment: "card",
+    fact: "The large popcorn cost almost as much as the ticket. Classic.",
     items: [
       { name: "Adult ticket", quantity: 1, price: 11.5, category: "entertainment", necessity: "nice_to_have" },
       { name: "Large popcorn", quantity: 1, price: 8.9, category: "entertainment", necessity: "impulse" },
       { name: "Large fizzy drink", quantity: 1, price: 7.1, category: "entertainment", necessity: "impulse" },
     ],
   },
-  {
-    id: "sample-5", scannedAt: now - 1 * day, is_receipt: true,
-    merchant: "Boots", date: "2026-11-13", currency: "GBP", total: 18.97, savings: 2.0,
-    payment_method: "contactless",
-    fun_fact: "Meal deal + toothpaste: the most British receipt possible.",
+  boots: {
+    merchant: "Boots", savings: 2.0, payment: "contactless",
+    fact: "Meal deal + toothpaste: the most British receipt possible.",
     items: [
       { name: "Toothpaste", quantity: 1, price: 2.5, category: "health", necessity: "essential" },
       { name: "Paracetamol", quantity: 1, price: 0.89, category: "health", necessity: "essential" },
@@ -65,7 +53,80 @@ export const SAMPLE_RECEIPTS: StoredReceipt[] = [
       { name: "Fancy face mask set", quantity: 1, price: 11.59, category: "health", necessity: "impulse" },
     ],
   },
-];
+  deliveroo: {
+    merchant: "Deliveroo", savings: 0, payment: "Apple Pay",
+    fact: "The delivery and service fees cost more than the fries.",
+    items: [
+      { name: "Burger meal", quantity: 1, price: 12.49, category: "dining", necessity: "nice_to_have" },
+      { name: "Loaded fries", quantity: 1, price: 4.99, category: "dining", necessity: "impulse" },
+      { name: "Delivery & service fee", quantity: 1, price: 5.48, category: "dining", necessity: "impulse" },
+    ],
+  },
+  spotify: {
+    merchant: "Spotify", savings: 0, payment: "card",
+    fact: "Your city has a permanent soundtrack.",
+    items: [{ name: "Spotify Premium Student", quantity: 1, price: 5.99, category: "tech_subscriptions", necessity: "nice_to_have" }],
+  },
+  aldi: {
+    merchant: "Aldi", savings: 4.2, payment: "card",
+    fact: "A proper big shop - the Food Kingdom is stocked for weeks.",
+    items: [
+      { name: "Pasta 1kg", quantity: 2, price: 1.7, category: "groceries", necessity: "essential" },
+      { name: "Chopped tomatoes", quantity: 4, price: 1.56, category: "groceries", necessity: "essential" },
+      { name: "Bananas", quantity: 1, price: 0.95, category: "groceries", necessity: "essential" },
+      { name: "Porridge oats", quantity: 1, price: 0.89, category: "groceries", necessity: "essential" },
+      { name: "Frozen veg mix", quantity: 2, price: 2.3, category: "groceries", necessity: "essential" },
+      { name: "Shower gel", quantity: 1, price: 1.29, category: "health", necessity: "essential" },
+    ],
+  },
+  primark: {
+    merchant: "Primark", savings: 0, payment: "contactless",
+    fact: "Came in for socks. Left with a hoodie.",
+    items: [
+      { name: "Socks 5-pack", quantity: 1, price: 4.0, category: "clothing", necessity: "essential" },
+      { name: "Oversized hoodie", quantity: 1, price: 14.0, category: "clothing", necessity: "impulse" },
+    ],
+  },
+};
+
+function iso(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function make(t: Template, date: Date, idx: number): StoredReceipt {
+  const total = Math.round(t.items.reduce((s, i) => s + i.price, 0) * 100) / 100;
+  return {
+    id: `demo-${idx}-${Date.now()}`, scannedAt: date.getTime(), source: "demo", is_receipt: true,
+    receipt_type: ["deliveroo", "spotify", "train"].some((k) => T[k] === t) ? "digital" : "paper",
+    merchant: t.merchant, date: iso(date), currency: "GBP", total, savings: t.savings,
+    payment_method: t.payment, fun_fact: t.fact, items: t.items,
+  };
+}
+
+/**
+ * Demo receipts dated relative to today: a few for this month plus two
+ * previous months, so History has something to show.
+ */
+export function makeDemoReceipts(): StoredReceipt[] {
+  const now = new Date();
+  const at = (monthsAgo: number, day: number) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1, 12);
+    const lastDay = monthsAgo === 0 ? now.getDate() : new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.max(1, Math.min(day, lastDay)));
+    return d;
+  };
+  const plan: [string, number, number][] = [
+    // this month (days are clamped to today)
+    ["tesco", 0, now.getDate() - 6], ["pret", 0, now.getDate() - 4], ["train", 0, now.getDate() - 3],
+    ["odeon", 0, now.getDate() - 2], ["boots", 0, now.getDate() - 1],
+    // last month
+    ["aldi", 1, 3], ["spotify", 1, 5], ["deliveroo", 1, 9], ["tesco", 1, 14], ["primark", 1, 18],
+    ["pret", 1, 21], ["deliveroo", 1, 26],
+    // two months ago
+    ["aldi", 2, 2], ["spotify", 2, 5], ["train", 2, 11], ["boots", 2, 19], ["aldi", 2, 24],
+  ];
+  return plan.map(([k, ago, day], i) => make(T[k], at(ago, day), i));
+}
 
 /** Offline fallback so the Insights tab never shows a blank screen in a demo. */
 export const SAMPLE_INSIGHTS: Insights = {
@@ -78,7 +139,7 @@ export const SAMPLE_INSIGHTS: Insights = {
   },
   patterns: [
     { title: "The snack tax", detail: "£11.50 of your Tesco shop was crisps, chocolate and energy drinks - nearly half the basket." },
-    { title: "Popcorn > movie", detail: "At the Odeon, snacks (£16.00) cost more than the ticket itself (£11.50)." },
+    { title: "Popcorn vs. movie", detail: "At the Odeon, snacks (£16.00) cost more than the ticket itself (£11.50)." },
     { title: "Railcard hero", detail: "You saved £10.45 on trains - your best saving by far." },
   ],
   savings_tips: [
