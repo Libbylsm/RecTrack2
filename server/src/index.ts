@@ -14,7 +14,12 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-const RECEIPT_SYSTEM = `You read photos of shopping receipts and turn them into clean structured data.
+const RECEIPT_SYSTEM = `You read receipts and turn them into clean structured data. The image is either:
+- a photo of a printed paper till receipt, or
+- a phone screenshot of a digital receipt: an order confirmation email, a delivery/shopping app order
+  (Deliveroo, Uber Eats, Just Eat, Amazon, Uber, Trainline, Apple/Google subscriptions...), or an online invoice.
+For screenshots, ignore phone UI (status bar, buttons, ads, "reorder" prompts) and use the order date, not today's date.
+Delivery, service and bag fees are separate line items in the same category as the order.
 - Extract every purchased line item. Skip subtotal/VAT/change/card-number lines.
 - Expand cryptic till abbreviations into normal product names.
 - Apply line discounts to the item price; put total discounts in "savings".
@@ -22,7 +27,8 @@ const RECEIPT_SYSTEM = `You read photos of shopping receipts and turn them into 
 - category must be one of: groceries, dining, transport, entertainment, household, health, clothing, tech_subscriptions, other.
   Fuel, train/bus tickets, parking -> transport. Restaurants, cafes, takeaway, meal deals -> dining.
 - necessity must be one of: essential, nice_to_have, impulse. Judge honestly but kindly.
-- If the image isn't a receipt, set is_receipt=false and leave items empty.`;
+- receipt_type must be "paper" or "digital".
+- If the image isn't a receipt or order confirmation, set is_receipt=false and leave items empty.`;
 
 app.post("/api/receipt", async (req, res) => {
   const { imageBase64, mediaType } = req.body ?? {};
@@ -56,17 +62,23 @@ Give 3-4 patterns, exactly 3 savings_tips (estimated_monthly_saving is a number)
 ${PERSONAS}`;
 
 app.post("/api/insights", async (req, res) => {
-  const receipts = req.body?.receipts;
+  const { receipts, monthlyBudget, month } = req.body ?? {};
   if (!Array.isArray(receipts) || receipts.length === 0) {
     res.status(400).json({ error: "receipts array is required" });
     return;
   }
+  const context = [
+    month ? `These are my receipts so far for ${month} (the month may not be over yet).` : "",
+    Number(monthlyBudget) > 0 ? `My monthly budget is £${Number(monthlyBudget)}.` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   try {
     const insights = await structured(
       Insights,
       "insights",
       INSIGHTS_SYSTEM,
-      `Here are my scanned receipts as JSON:\n${JSON.stringify(receipts)}`,
+      `${context}\nHere are my scanned receipts as JSON:\n${JSON.stringify(receipts)}`,
     );
     res.json(insights);
   } catch (err) {

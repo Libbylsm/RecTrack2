@@ -24,7 +24,10 @@ export const ReceiptItem = z.object({
 });
 
 export const Receipt = z.object({
-  is_receipt: z.boolean().describe("false if the image is not a readable shopping receipt"),
+  is_receipt: z.boolean().describe("false if the image is not a readable receipt, invoice or order confirmation"),
+  receipt_type: z
+    .enum(["paper", "digital"])
+    .describe("paper = photo of a printed till receipt; digital = screenshot of an e-receipt, email, app order or invoice"),
   merchant: z.string(),
   date: z.string().describe("ISO date YYYY-MM-DD, or empty string if not visible"),
   currency: z.string().describe("ISO currency code, e.g. GBP"),

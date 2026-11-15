@@ -1,32 +1,35 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Insights, StoredReceipt } from "./types";
 
-const RECEIPTS_KEY = "rr.receipts.v1";
-const INSIGHTS_KEY = "rr.insights.v1";
+// Data is stored per user so each demo account has its own city.
+const receiptsKey = (userId: string) => `rr.${userId}.receipts.v2`;
+const insightsKey = (userId: string) => `rr.${userId}.insights.v2`;
 
-export async function loadReceipts(): Promise<StoredReceipt[]> {
+export async function loadReceipts(userId: string): Promise<StoredReceipt[]> {
   try {
-    const raw = await AsyncStorage.getItem(RECEIPTS_KEY);
+    const raw = await AsyncStorage.getItem(receiptsKey(userId));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-export async function saveReceipts(receipts: StoredReceipt[]) {
-  await AsyncStorage.setItem(RECEIPTS_KEY, JSON.stringify(receipts));
+export async function saveReceipts(userId: string, receipts: StoredReceipt[]) {
+  await AsyncStorage.setItem(receiptsKey(userId), JSON.stringify(receipts));
 }
 
-export async function loadInsights(): Promise<Insights | null> {
+/** AI insights, keyed by month ("2026-11"). */
+export type InsightsByMonth = Record<string, Insights>;
+
+export async function loadInsights(userId: string): Promise<InsightsByMonth> {
   try {
-    const raw = await AsyncStorage.getItem(INSIGHTS_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = await AsyncStorage.getItem(insightsKey(userId));
+    return raw ? JSON.parse(raw) : {};
   } catch {
-    return null;
+    return {};
   }
 }
 
-export async function saveInsights(insights: Insights | null) {
-  if (insights) await AsyncStorage.setItem(INSIGHTS_KEY, JSON.stringify(insights));
-  else await AsyncStorage.removeItem(INSIGHTS_KEY);
+export async function saveInsights(userId: string, map: InsightsByMonth) {
+  await AsyncStorage.setItem(insightsKey(userId), JSON.stringify(map));
 }

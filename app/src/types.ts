@@ -22,6 +22,7 @@ export interface ReceiptItem {
 
 export interface Receipt {
   is_receipt: boolean;
+  receipt_type?: "paper" | "digital";
   merchant: string;
   date: string;
   currency: string;
@@ -36,7 +37,7 @@ export interface Receipt {
 export interface StoredReceipt extends Receipt {
   id: string;
   scannedAt: number;
-  imageUri?: string;
+  source?: "camera" | "photo" | "screenshot" | "demo";
 }
 
 export interface Insights {
