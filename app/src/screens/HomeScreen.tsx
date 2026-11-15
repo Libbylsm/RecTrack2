@@ -43,11 +43,11 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
           <Text style={styles.avatarText}>{(user.name || "?").slice(0, 1).toUpperCase()}</Text>
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.hello}>Hi, {user.name} 👋</Text>
+          <Text style={styles.hello}>Hi, {user.name}</Text>
           <Text style={styles.helloSub}>Conductor of Receiptopolis</Text>
         </View>
-        <Pill icon="🔥" text={`${game.streak}`} color={C.gold} />
-        <Pill icon="🎵" text={`Lv ${game.level}`} color={C.accentText} bg={C.accentSoft} />
+        <Pill ion="flame" text={`${game.streak}`} color={C.gold} bg={C.goldSoft} />
+        <Pill ion="musical-notes" text={`Lv ${game.level}`} color={C.accentText} bg={C.accentSoft} />
       </View>
 
       {/* Hero: this month's spending */}
@@ -82,7 +82,9 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
       {cur.length === 0 && prevKey && (
         <Pressable onPress={() => goTo("history")}>
           <Card style={[styles.banner]}>
-            <Text style={{ fontSize: 28 }}>🌅</Text>
+            <View style={styles.bannerIcon}>
+              <Ionicons name="sunny" size={22} color={C.gold} />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.bannerTitle}>A fresh month, a fresh city!</Text>
               <Text style={styles.bannerText}>
@@ -176,6 +178,7 @@ const styles = themed(() => ({
   ringPct: { color: C.onAccent, fontSize: 15, fontWeight: "900" },
   ringSub: { color: C.onAccent, fontSize: 8, fontWeight: "700", opacity: 0.9 },
   banner: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 14, borderColor: C.accent },
+  bannerIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.goldSoft, alignItems: "center", justifyContent: "center" },
   bannerTitle: { color: C.ink, fontWeight: "800" },
   bannerText: { color: C.muted, marginTop: 2, fontSize: 13 },
   levelRow: { flexDirection: "row", alignItems: "center", gap: 12 },

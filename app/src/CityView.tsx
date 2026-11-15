@@ -13,6 +13,20 @@ const FRONT: [number, number][] = [[120, 34], [226, 32], [30, 30], [160, 30], [2
 const BACK: [number, number, number][] = [[8, 26, 78], [96, 22, 100], [196, 24, 86], [326, 22, 70]];
 const TREE_X = [22, 106, 205, 318, 160, 290, 62, 250, 140, 340];
 
+/** Icon per district (replaces the landmark emoji on the city). */
+const DISTRICT_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  groceries: "basket",
+  dining: "restaurant",
+  transport: "train",
+  entertainment: "film",
+  household: "home",
+  health: "medkit",
+  clothing: "shirt",
+  tech_subscriptions: "phone-portrait",
+  other: "cube",
+};
+const BAR_H = [62, 84, 48, 92, 70, 56, 88, 42, 76, 66, 94, 52, 80, 60, 86];
+
 /** The month's city as a skyline: rooftops are equaliser bars, essentials plant trees, impulse adds smog. */
 function Skyline({ city }: { city: CityState }) {
   const maxSpend = Math.max(1, ...city.districts.map((d) => d.spend));
@@ -135,10 +149,12 @@ export default function CityView({ receipts, title = "Receiptopolis" }: { receip
 
       {receipts.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={{ fontSize: 48 }}>🏜️</Text>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="musical-notes" size={28} color={C.accentText} />
+          </View>
           <Text style={styles.emptyTitle}>Fresh land, fresh month</Text>
           <Text style={styles.emptyText}>
-            Scan a receipt to lay the first brick. Impulse buys build factories 🏭, essentials and deals plant trees 🌳.
+            Scan a receipt to lay the first brick. Impulse buys build factories and smog, essentials and deals plant trees.
           </Text>
         </View>
       ) : (
@@ -151,17 +167,23 @@ export default function CityView({ receipts, title = "Receiptopolis" }: { receip
             >
               <View style={styles.plotHeader}>
                 <View style={[styles.landmarkBubble, { backgroundColor: d.def.color + "33" }]}>
-                  <Text style={{ fontSize: 18 }}>{d.def.landmark}</Text>
+                  <Ionicons name={DISTRICT_ICON[d.category] ?? "cube"} size={17} color={d.def.color} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.plotName} numberOfLines={1}>{d.def.name}</Text>
                   <Text style={styles.plotMeta}>Lv {d.level} · {money(d.spend, city.currency)}</Text>
                 </View>
               </View>
+              {/* One bar per building: district colour, coral for impulse factories */}
               <View style={styles.buildings}>
                 {d.buildings.map((b, i) => (
                   <PopIn key={`${receipts.length}-${i}`} delay={i * 50}>
-                    <Text style={styles.building}>{b}</Text>
+                    <View
+                      style={[
+                        styles.building,
+                        { height: Math.round((44 * BAR_H[i % BAR_H.length]) / 100), backgroundColor: b === "🏭" ? C.bad : d.def.color },
+                      ]}
+                    />
                   </PopIn>
                 ))}
               </View>
@@ -186,7 +208,9 @@ function DistrictDetail({
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
       <View style={styles.grabber} />
-      <Text style={{ fontSize: 56, textAlign: "center", marginTop: 12 }}>{district.def.landmark}</Text>
+      <View style={[styles.detailIcon, { backgroundColor: district.def.color + "33" }]}>
+        <Ionicons name={DISTRICT_ICON[district.category] ?? "cube"} size={34} color={district.def.color} />
+      </View>
       <Text style={styles.modalTitle}>{district.def.name}</Text>
       <Text style={styles.modalSub}>
         {money(district.spend, currency)} · {district.itemCount} items · {money(district.impulseSpend, currency)} impulse
@@ -223,8 +247,10 @@ const styles = themed(() => ({
   landmarkBubble: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   plotName: { fontWeight: "800", color: C.ink, fontSize: 13 },
   plotMeta: { color: C.muted, fontSize: 12, marginTop: 1 },
-  buildings: { flexDirection: "row", flexWrap: "wrap", gap: 1, marginTop: 8, minHeight: 56 },
-  building: { fontSize: 22 },
+  buildings: { flexDirection: "row", alignItems: "flex-end", gap: 3, marginTop: 10, height: 44 },
+  building: { width: 6, borderRadius: 3, borderBottomLeftRadius: 1, borderBottomRightRadius: 1 },
+  emptyIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: C.accentSoft, alignItems: "center", justifyContent: "center" },
+  detailIcon: { width: 72, height: 72, borderRadius: 22, alignItems: "center", justifyContent: "center", alignSelf: "center", marginTop: 12 },
   empty: { alignItems: "center", padding: 24, backgroundColor: C.card, borderRadius: R.lg, marginTop: 10, borderWidth: 1, borderColor: C.line },
   emptyTitle: { fontSize: 18, fontWeight: "800", marginTop: 6, color: C.ink },
   emptyText: { textAlign: "center", color: C.muted, marginTop: 6, lineHeight: 20 },

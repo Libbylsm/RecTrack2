@@ -97,9 +97,12 @@ export function Bar({ progress, color = C.accent, height = 8 }: { progress: numb
   );
 }
 
-export function Pill({ icon, text, color = C.ink, bg = C.cardHi }: { icon?: string; text: string; color?: string; bg?: string }) {
+export function Pill({
+  icon, ion, text, color = C.ink, bg = C.cardHi,
+}: { icon?: string; ion?: keyof typeof Ionicons.glyphMap; text: string; color?: string; bg?: string }) {
   return (
     <View style={[s.pill, { backgroundColor: bg }]}>
+      {ion && <Ionicons name={ion} size={14} color={color} />}
       {icon && <Text style={{ fontSize: 13 }}>{icon}</Text>}
       <Text style={[s.pillText, { color }]}>{text}</Text>
     </View>
