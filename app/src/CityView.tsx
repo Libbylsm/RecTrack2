@@ -6,6 +6,7 @@ import { buildCity, District, money, skyColors } from "./city";
 import { C, R, necessityColor } from "./theme";
 import { Bar } from "./ui";
 import type { StoredReceipt } from "./types";
+import CityMusic from "./CityMusic";
 
 function PopIn({ children, delay }: { children: React.ReactNode; delay: number }) {
   const scale = useRef(new Animated.Value(0)).current;
@@ -61,6 +62,7 @@ export default function CityView({ receipts, title = "Receiptopolis" }: { receip
         </View>
         <Text style={styles.trees}>{"🌳".repeat(city.trees) || " "}</Text>
       </LinearGradient>
+      <CityMusic city={city} />
 
       {receipts.length === 0 ? (
         <View style={styles.empty}>

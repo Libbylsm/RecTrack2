@@ -91,6 +91,7 @@ export default function App() {
           )}
           {tab === "history" && <HistoryScreen user={user} receipts={receipts} insights={insights} />}
           {tab === "profile" && (
+            
             <ProfileScreen
               user={user}
               receipts={receipts}
