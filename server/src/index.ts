@@ -90,7 +90,7 @@ function handleError(err: unknown, res: express.Response) {
   if (err instanceof LLMError) {
     console.error("LLM error:", err.status, err.message);
     const friendly =
-      err.status === 429 ? "The free AI model is busy (rate limited) - try again in a moment." : err.message;
+      err.status === 429 ? "The AI is busy right now - try again in a moment." : err.message;
     res.status(err.status).json({ error: friendly });
   } else {
     console.error(err);

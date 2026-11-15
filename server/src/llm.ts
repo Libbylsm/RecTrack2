@@ -61,7 +61,7 @@ async function chat(messages: ChatMessage[], jsonSchema: object, name: string) {
   const e: any = lastErr;
   throw new LLMError(
     e?.name === "TimeoutError" || e?.name === "AbortError"
-      ? "The free AI model took too long. Try again (or try a smaller/clearer photo)."
+      ? "The AI took too long to read this receipt. Try again (or try a clearer photo)."
       : `Couldn't reach OpenRouter: ${e?.cause?.message ?? e?.message}`,
     504,
   );
