@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { Ionicons } from "@expo/vector-icons";
-import { API_URL, scanReceipt } from "../api";
+import { API_URL, checkServer, scanReceipt } from "../api";
 import { DISTRICTS, money } from "../city";
 import { currentMonthKey, groupByMonth, monthLabel, receiptMonth } from "../month";
 import { makeDemoReceipts } from "../sampleData";
-import { C, R, necessityColor, necessityLabel } from "../theme";
+import { C, R, necessityColor, necessityLabel, themed } from "../theme";
 import { Button, Card, SectionTitle } from "../ui";
 import type { StoredReceipt } from "../types";
 
@@ -32,21 +32,19 @@ async function shrinkForUpload(uri: string, width: number) {
 
 export const xpForReceipt = (r: StoredReceipt) => 40 + r.items.length * 5 + Math.round((r.savings || 0) * 5);
 
-function Roulette() {
-  const spin = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true }));
-    loop.start();
-    return () => loop.stop();
-  }, []);
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
-  return <Animated.Text style={{ fontSize: 56, transform: [{ rotate }] }}>🎰</Animated.Text>;
-}
-
 export default function ScanScreen({ receipts, onAdd, onDelete, goHome }: Props) {
   const [busy, setBusy] = useState<null | { done: number; total: number }>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [results, setResults] = useState<StoredReceipt[]>([]);
+  const [online, setOnline] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const ping = () => checkServer().then((ok) => alive && setOnline(ok));
+    ping();
+    const t = setInterval(ping, 8000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
 
   const thisMonth = useMemo(
     () => (groupByMonth(receipts).get(currentMonthKey()) ?? []).slice().sort((a, b) => b.scannedAt - a.scannedAt),
@@ -72,6 +70,17 @@ export default function ScanScreen({ receipts, onAdd, onDelete, goHome }: Props)
       source === "camera" ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
     if (result.canceled || !result.assets?.length) return;
 
+    if (!(await checkServer())) {
+      setOnline(false);
+      Alert.alert(
+        "Server offline",
+        `Can't reach the Receipt Roulette server at ${API_URL}.
+
+On the laptop, run "npm run dev" in the server folder, and keep the phone on the same Wi-Fi.`,
+      );
+      return;
+    }
+    setOnline(true);
     const assets = result.assets;
     setResults([]);
     setBusy({ done: 0, total: assets.length });
@@ -113,28 +122,34 @@ export default function ScanScreen({ receipts, onAdd, onDelete, goHome }: Props)
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={styles.wrap}>
       <Text style={styles.h1}>Scan</Text>
       <Text style={styles.sub}>Paper receipts or e-receipt screenshots. AI reads every line and builds your city.</Text>
+      {online === false && (
+        <View style={styles.offline}>
+          <Ionicons name="cloud-offline-outline" size={18} color={C.bad} />
+          <Text style={styles.offlineText}>Server offline. Run "npm run dev" in the server folder on your laptop.</Text>
+        </View>
+      )}
 
       <Pressable disabled={!!busy} onPress={() => pick("camera")} style={({ pressed }) => [styles.primary, pressed && { opacity: 0.9 }]}>
         <View style={styles.primaryIcon}>
-          <Ionicons name="camera" size={28} color={C.limeInk} />
+          <Ionicons name="camera" size={28} color={C.onAccent} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.primaryTitle}>Snap a paper receipt</Text>
           <Text style={styles.primarySub}>Lay it flat, good light</Text>
         </View>
-        <Ionicons name="arrow-forward" size={22} color={C.limeInk} />
+        <Ionicons name="arrow-forward" size={22} color={C.onAccent} />
       </Pressable>
 
       <View style={styles.row}>
         <Pressable disabled={!!busy} onPress={() => pick("screenshot")} style={styles.option}>
-          <View style={[styles.optIcon, { backgroundColor: C.violetSoft }]}>
-            <Ionicons name="phone-portrait-outline" size={22} color={C.violet} />
+          <View style={[styles.optIcon, { backgroundColor: C.accent2Soft }]}>
+            <Ionicons name="phone-portrait-outline" size={22} color={C.accent2} />
           </View>
           <Text style={styles.optTitle}>E-receipt</Text>
           <Text style={styles.optSub}>Screenshots of emails, Deliveroo, Amazon, Uber… up to 5</Text>
         </Pressable>
         <Pressable disabled={!!busy} onPress={() => pick("photo")} style={styles.option}>
-          <View style={[styles.optIcon, { backgroundColor: "rgba(255,201,77,0.15)" }]}>
+          <View style={[styles.optIcon, { backgroundColor: C.goldSoft }]}>
             <Ionicons name="images-outline" size={22} color={C.gold} />
           </View>
           <Text style={styles.optTitle}>From photos</Text>
@@ -145,11 +160,10 @@ export default function ScanScreen({ receipts, onAdd, onDelete, goHome }: Props)
       {busy && (
         <Card style={{ marginTop: 16, alignItems: "center" }}>
           {preview && <Image source={{ uri: preview }} style={styles.preview} />}
-          <Roulette />
+          <ActivityIndicator size="large" color={C.accent} style={{ marginVertical: 8 }} />
           <Text style={styles.busyText}>
             Reading receipt{busy.total > 1 ? ` ${busy.done + 1} of ${busy.total}` : ""}…
           </Text>
-          <Text style={styles.busySub}>Free AI models can take 20-40 seconds</Text>
         </Card>
       )}
 
@@ -217,22 +231,25 @@ export default function ScanScreen({ receipts, onAdd, onDelete, goHome }: Props)
       {thisMonth.length > 0 && <Text style={styles.hint}>Long-press a receipt to delete it</Text>}
 
       <Pressable style={styles.demo} onPress={loadDemo}>
-        <Ionicons name="sparkles" size={16} color={C.lime} />
+        <Ionicons name="sparkles" size={16} color={C.accent} />
         <Text style={styles.demoText}>Load demo receipts</Text>
       </Pressable>
-      <Text style={styles.server}>Server: {API_URL}</Text>
+      <Text style={styles.server}>
+        <Text style={{ color: online ? C.good : online === false ? C.bad : C.dim }}>● </Text>
+        Server: {API_URL}
+      </Text>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   h1: { color: C.ink, fontSize: 30, fontWeight: "900", letterSpacing: -0.8 },
   sub: { color: C.muted, marginTop: 6, lineHeight: 20 },
-  primary: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: C.lime, borderRadius: R.lg, padding: 18, marginTop: 20 },
+  primary: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: C.accent, borderRadius: R.lg, padding: 18, marginTop: 20 },
   primaryIcon: { width: 54, height: 54, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.08)", alignItems: "center", justifyContent: "center" },
-  primaryTitle: { color: C.limeInk, fontWeight: "900", fontSize: 18 },
-  primarySub: { color: C.limeInk, opacity: 0.7, marginTop: 2 },
+  primaryTitle: { color: C.onAccent, fontWeight: "900", fontSize: 18 },
+  primarySub: { color: C.onAccent, opacity: 0.7, marginTop: 2 },
   row: { flexDirection: "row", gap: 12, marginTop: 12 },
   option: { flex: 1, backgroundColor: C.card, borderRadius: R.lg, padding: 16, borderWidth: 1, borderColor: C.line },
   optIcon: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
@@ -240,14 +257,13 @@ const styles = StyleSheet.create({
   optSub: { color: C.muted, fontSize: 12, marginTop: 4, lineHeight: 17 },
   preview: { width: "100%", height: 160, borderRadius: R.sm, marginBottom: 10 },
   busyText: { color: C.ink, fontWeight: "800", marginTop: 8 },
-  busySub: { color: C.muted, fontSize: 12, marginTop: 4 },
   resHead: { flexDirection: "row", alignItems: "flex-start" },
   merchant: { color: C.ink, fontSize: 20, fontWeight: "900" },
   meta: { color: C.muted, fontSize: 12, marginTop: 2 },
   total: { color: C.ink, fontSize: 20, fontWeight: "900" },
-  xp: { color: C.lime, fontWeight: "800", fontSize: 12, marginTop: 2 },
+  xp: { color: C.accentText, fontWeight: "800", fontSize: 12, marginTop: 2 },
   filed: { color: C.gold, fontSize: 12, marginTop: 8, fontWeight: "700" },
-  funFact: { backgroundColor: C.violetSoft, color: C.ink, padding: 12, borderRadius: R.sm, marginVertical: 12, overflow: "hidden" },
+  funFact: { backgroundColor: C.accent2Soft, color: C.ink, padding: 12, borderRadius: R.sm, marginVertical: 12, overflow: "hidden" },
   itemRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.line },
   itemName: { color: C.ink, fontWeight: "700" },
   itemPrice: { color: C.ink, fontWeight: "800" },
@@ -257,6 +273,8 @@ const styles = StyleSheet.create({
   histIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.cardHi, alignItems: "center", justifyContent: "center" },
   hint: { color: C.dim, textAlign: "center", fontSize: 12, marginTop: 4 },
   demo: { flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 24, padding: 14, borderRadius: R.md, borderWidth: 1, borderColor: C.line, borderStyle: "dashed" },
-  demoText: { color: C.lime, fontWeight: "800" },
+  demoText: { color: C.accentText, fontWeight: "800" },
+  offline: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 14, padding: 12, borderRadius: R.sm, backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.bad },
+  offlineText: { color: C.ink, flex: 1, fontSize: 13, fontWeight: "600" },
   server: { color: C.dim, textAlign: "center", fontSize: 11, marginTop: 16 },
-});
+}));

@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
-import { C, R } from "./theme";
+import { C, R, themed } from "./theme";
 
 export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[s.card, style]}>{children}</View>;
@@ -22,7 +22,7 @@ export function SectionTitle({ title, action, onAction }: { title: string; actio
 }
 
 export function Ring({
-  size = 120, stroke = 12, progress, color = C.lime, track = C.line, children,
+  size = 120, stroke = 12, progress, color = C.accent, track = C.line, children,
 }: { size?: number; stroke?: number; progress: number; color?: string; track?: string; children?: ReactNode }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
@@ -42,7 +42,7 @@ export function Ring({
   );
 }
 
-export function Bar({ progress, color = C.lime, height = 8 }: { progress: number; color?: string; height?: number }) {
+export function Bar({ progress, color = C.accent, height = 8 }: { progress: number; color?: string; height?: number }) {
   return (
     <View style={{ height, backgroundColor: C.line, borderRadius: height / 2, overflow: "hidden" }}>
       <View style={{ width: `${Math.max(0, Math.min(1, progress)) * 100}%`, height, backgroundColor: color, borderRadius: height / 2 }} />
@@ -60,13 +60,13 @@ export function Pill({ icon, text, color = C.ink, bg = C.cardHi }: { icon?: stri
 }
 
 export function Button({
-  title, onPress, variant = "lime", icon, loading, disabled, style,
+  title, onPress, variant = "accent", icon, loading, disabled, style,
 }: {
-  title: string; onPress: () => void; variant?: "lime" | "dark" | "white" | "ghost";
+  title: string; onPress: () => void; variant?: "accent" | "dark" | "white" | "ghost";
   icon?: keyof typeof Ionicons.glyphMap; loading?: boolean; disabled?: boolean; style?: StyleProp<ViewStyle>;
 }) {
-  const bg = { lime: C.lime, dark: C.cardHi, white: "#FFFFFF", ghost: "transparent" }[variant];
-  const fg = { lime: C.limeInk, dark: C.ink, white: "#111111", ghost: C.ink }[variant];
+  const bg = { accent: C.accent, dark: C.cardHi, white: C.ink, ghost: "transparent" }[variant];
+  const fg = { accent: C.onAccent, dark: C.ink, white: C.bg, ghost: C.ink }[variant];
   return (
     <Pressable
       onPress={onPress}
@@ -86,15 +86,15 @@ export function Button({
   );
 }
 
-export const s = StyleSheet.create({
+export const s = themed(() => ({
   card: { backgroundColor: C.card, borderRadius: R.lg, padding: 18, borderWidth: 1, borderColor: C.line },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 26, marginBottom: 12 },
   sectionTitle: { color: C.ink, fontSize: 19, fontWeight: "800", letterSpacing: -0.3 },
-  sectionAction: { color: C.lime, fontWeight: "700" },
+  sectionAction: { color: C.accentText, fontWeight: "700" },
   pill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   pillText: { fontWeight: "700", fontSize: 13 },
   btn: { flexDirection: "row", gap: 10, alignItems: "center", justifyContent: "center", paddingVertical: 16, borderRadius: R.md },
   btnText: { fontWeight: "800", fontSize: 16 },
   h1: { color: C.ink, fontSize: 30, fontWeight: "900", letterSpacing: -0.8 },
   muted: { color: C.muted },
-});
+}));

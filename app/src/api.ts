@@ -30,13 +30,27 @@ async function post<T>(path: string, body: unknown, timeoutMs = 150_000): Promis
     if (!res.ok) throw new Error(json.error ?? `Server error ${res.status}`);
     return json as T;
   } catch (e: any) {
-    if (e?.name === "AbortError") throw new Error("The server took too long to respond.");
+    if (e?.name === "AbortError") throw new Error("The AI took too long to read this receipt. Please try again.");
     if (e instanceof TypeError) {
       throw new Error(
         `Couldn't talk to the server at ${API_URL} (${e.message}). Is it running, and is the phone on the same Wi-Fi?`,
       );
     }
     throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Quick reachability check so we fail fast instead of waiting on a long timeout. */
+export async function checkServer(timeoutMs = 4000): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API_URL}/health`, { signal: controller.signal });
+    return res.ok;
+  } catch {
+    return false;
   } finally {
     clearTimeout(timer);
   }

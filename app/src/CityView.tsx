@@ -3,7 +3,7 @@ import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { buildCity, District, money, skyColors } from "./city";
-import { C, R, necessityColor } from "./theme";
+import { C, R, necessityColor, themed } from "./theme";
 import { Bar } from "./ui";
 import type { StoredReceipt } from "./types";
 
@@ -46,7 +46,7 @@ export default function CityView({ receipts, title = "Receiptopolis" }: { receip
           <Text style={{ fontSize: 34, opacity: city.health >= 50 ? 1 : 0.35 }}>☀️</Text>
           {Array.from({ length: city.pollution }).map((_, i) => (
             <Drift key={i} offset={i}>
-              <Text style={{ fontSize: 26 }}>{i % 2 ? "🌫️" : "☁️"}</Text>
+              <Text style={{ fontSize: 26 }}>☁️</Text>
             </Drift>
           ))}
         </View>
@@ -131,13 +131,13 @@ function DistrictDetail({
         </View>
       ))}
       <Pressable onPress={onClose} style={styles.closeBtn}>
-        <Text style={{ color: C.limeInk, fontWeight: "800" }}>Back to city</Text>
+        <Text style={{ color: C.onAccent, fontWeight: "800" }}>Back to city</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   sky: { borderRadius: R.lg, padding: 16, overflow: "hidden" },
   skyRow: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 40, flexWrap: "wrap" },
   cityTitle: { fontSize: 24, fontWeight: "900", color: "#fff", marginTop: 4, letterSpacing: -0.5 },
@@ -164,5 +164,5 @@ const styles = StyleSheet.create({
   itemName: { fontWeight: "700", color: C.ink },
   itemMerchant: { color: C.muted, fontSize: 12, marginTop: 2 },
   itemPrice: { fontWeight: "800", color: C.ink },
-  closeBtn: { backgroundColor: C.lime, padding: 16, borderRadius: R.md, alignItems: "center", marginTop: 16 },
-});
+  closeBtn: { backgroundColor: C.accent, padding: 16, borderRadius: R.md, alignItems: "center", marginTop: 16 },
+}));

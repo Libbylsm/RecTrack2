@@ -7,7 +7,7 @@ import { buildCity, money } from "../city";
 import CityView from "../CityView";
 import { computeGame, XP_PER_LEVEL } from "../game";
 import { currentMonthKey, daysLeftInMonth, groupByMonth, monthLabel } from "../month";
-import { C, R } from "../theme";
+import { C, R, themed } from "../theme";
 import { Bar, Card, Pill, Ring, SectionTitle } from "../ui";
 import type { StoredReceipt } from "../types";
 
@@ -47,11 +47,11 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
           <Text style={styles.helloSub}>Mayor of Receiptopolis</Text>
         </View>
         <Pill icon="🔥" text={`${game.streak}`} color={C.gold} />
-        <Pill icon="⚡" text={`Lv ${game.level}`} color={C.lime} />
+        <Pill icon="⚡" text={`Lv ${game.level}`} color={C.accent} />
       </View>
 
       {/* Hero: this month's spending */}
-      <LinearGradient colors={["#2A2457", "#17181E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+      <LinearGradient colors={[C.heroFrom, C.card]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
         <View style={{ flex: 1 }}>
           <Text style={styles.heroLabel}>Spent in {monthLabel(curKey).split(" ")[0]}</Text>
           <Text style={styles.heroTotal} adjustsFontSizeToFit numberOfLines={1}>
@@ -70,7 +70,7 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
             {city.totalSavings > 0 && <Pill text={`Saved ${money(city.totalSavings, city.currency)}`} color={C.good} />}
           </View>
         </View>
-        <Ring size={108} stroke={11} progress={used} color={over ? C.bad : used > 0.8 ? C.warn : C.lime}>
+        <Ring size={108} stroke={11} progress={used} color={over ? C.bad : used > 0.8 ? C.warn : C.accent}>
           <Text style={styles.ringPct}>{budget ? Math.round(used * 100) : 0}%</Text>
           <Text style={styles.ringSub}>of £{budget}</Text>
         </Ring>
@@ -105,7 +105,7 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
           <Text style={styles.xpTotal}>{game.xp} XP</Text>
         </View>
         <View style={{ marginTop: 12 }}>
-          <Bar progress={game.levelProgress} color={C.violet} height={10} />
+          <Bar progress={game.levelProgress} color={C.accent2} height={10} />
         </View>
       </Card>
 
@@ -114,15 +114,15 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
       <View style={{ gap: 10 }}>
         {game.quests.map((q) => (
           <Card key={q.id} style={styles.quest}>
-            <View style={[styles.questIcon, q.done && { backgroundColor: C.lime }]}>
-              <Ionicons name={q.done ? "checkmark" : (q.icon as any)} size={20} color={q.done ? C.limeInk : C.lime} />
+            <View style={[styles.questIcon, q.done && { backgroundColor: C.accent }]}>
+              <Ionicons name={q.done ? "checkmark" : (q.icon as any)} size={20} color={q.done ? C.onAccent : C.accent} />
             </View>
             <View style={{ flex: 1, gap: 8 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={styles.questTitle}>{q.title}</Text>
                 <Text style={styles.questXp}>+{q.xp} XP</Text>
               </View>
-              <Bar progress={q.progress} color={q.done ? C.lime : C.violet} height={6} />
+              <Bar progress={q.progress} color={q.done ? C.accent : C.accent2} height={6} />
               <Text style={styles.questLabel}>{q.label}</Text>
             </View>
           </Card>
@@ -155,29 +155,29 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   topBar: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.violet, alignItems: "center", justifyContent: "center" },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.accent2, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#fff", fontWeight: "900", fontSize: 18 },
   hello: { color: C.ink, fontWeight: "800", fontSize: 17 },
   helloSub: { color: C.muted, fontSize: 12, marginTop: 1 },
-  hero: { borderRadius: R.lg, padding: 20, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#3A3370" },
+  hero: { borderRadius: R.lg, padding: 20, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: C.heroBorder },
   heroLabel: { color: C.muted, fontWeight: "700", fontSize: 13, textTransform: "uppercase", letterSpacing: 1 },
   heroTotal: { color: C.ink, fontSize: 40, fontWeight: "900", letterSpacing: -1.5, marginTop: 4 },
-  heroMeta: { color: C.lime, fontWeight: "700", marginTop: 2 },
+  heroMeta: { color: C.accentText, fontWeight: "700", marginTop: 2 },
   heroPills: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 12 },
   ringPct: { color: C.ink, fontSize: 22, fontWeight: "900" },
   ringSub: { color: C.muted, fontSize: 11, fontWeight: "600" },
-  banner: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 14, borderColor: C.lime },
+  banner: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 14, borderColor: C.accent },
   bannerTitle: { color: C.ink, fontWeight: "800" },
   bannerText: { color: C.muted, marginTop: 2, fontSize: 13 },
   levelRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  levelBadge: { width: 44, height: 44, borderRadius: 14, backgroundColor: C.violetSoft, borderWidth: 2, borderColor: C.violet, alignItems: "center", justifyContent: "center" },
+  levelBadge: { width: 44, height: 44, borderRadius: 14, backgroundColor: C.accent2Soft, borderWidth: 2, borderColor: C.accent2, alignItems: "center", justifyContent: "center" },
   levelNum: { color: C.ink, fontWeight: "900", fontSize: 18 },
   levelTitle: { color: C.ink, fontWeight: "800", fontSize: 16 },
   levelSub: { color: C.muted, fontSize: 12, marginTop: 2 },
-  xpTotal: { color: C.violet, fontWeight: "900" },
+  xpTotal: { color: C.accent2, fontWeight: "900" },
   quest: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14 },
   questIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.cardHi, alignItems: "center", justifyContent: "center" },
   questTitle: { color: C.ink, fontWeight: "700", flex: 1 },
@@ -189,4 +189,4 @@ const styles = StyleSheet.create({
   recentName: { color: C.ink, fontWeight: "700" },
   recentMeta: { color: C.muted, fontSize: 12, marginTop: 2 },
   recentAmt: { color: C.ink, fontWeight: "800" },
-});
+}));

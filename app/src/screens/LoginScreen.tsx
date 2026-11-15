@@ -3,7 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleShee
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { signInWithEmail, signInWithProvider, User } from "../auth";
-import { C, R } from "../theme";
+import { C, R, themed } from "../theme";
 import { Button } from "../ui";
 
 export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: User) => void }) {
@@ -34,7 +34,7 @@ export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: User) => v
   }
 
   return (
-    <LinearGradient colors={["#1B1640", C.bg, C.bg]} style={{ flex: 1 }}>
+    <LinearGradient colors={[C.loginGlow, C.bg, C.bg]} style={{ flex: 1 }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.wrap} keyboardShouldPersistTaps="handled">
           <View style={styles.hero}>
@@ -57,7 +57,7 @@ export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: User) => v
             <View style={{ gap: 12 }}>
               <Button title="Continue with Apple" icon="logo-apple" variant="white" loading={busy === "apple"} disabled={!!busy} onPress={() => provider("apple")} />
               <Button title="Continue with Google" icon="logo-google" variant="dark" loading={busy === "google"} disabled={!!busy} onPress={() => provider("google")} />
-              <Button title="Continue with Email" icon="mail" variant="lime" disabled={!!busy} onPress={() => setMode("email")} />
+              <Button title="Continue with Email" icon="mail" variant="accent" disabled={!!busy} onPress={() => setMode("email")} />
             </View>
           ) : (
             <View style={{ gap: 12 }}>
@@ -81,7 +81,7 @@ export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: User) => v
               <Pressable onPress={() => setCreating(!creating)}>
                 <Text style={styles.switch}>
                   {creating ? "Already have an account? " : "New here? "}
-                  <Text style={{ color: C.lime, fontWeight: "800" }}>{creating ? "Sign in" : "Create an account"}</Text>
+                  <Text style={{ color: C.accentText, fontWeight: "800" }}>{creating ? "Sign in" : "Create an account"}</Text>
                 </Text>
               </Pressable>
               <Pressable onPress={() => setMode("choose")}>
@@ -97,10 +97,10 @@ export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: User) => v
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { flexGrow: 1, justifyContent: "flex-end", padding: 22, paddingTop: 80, paddingBottom: 40 },
   hero: { alignItems: "center", marginBottom: 36, flex: 1, justifyContent: "center" },
-  logo: { width: 92, height: 92, borderRadius: 28, backgroundColor: C.lime, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-8deg" }] },
+  logo: { width: 92, height: 92, borderRadius: 28, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-8deg" }] },
   brand: { color: C.ink, fontSize: 34, fontWeight: "900", letterSpacing: -1, marginTop: 22 },
   tagline: { color: C.muted, textAlign: "center", marginTop: 8, fontSize: 16, lineHeight: 23 },
   featureRow: { flexDirection: "row", gap: 10, marginTop: 24 },
@@ -111,4 +111,4 @@ const styles = StyleSheet.create({
   input: { flex: 1, color: C.ink, paddingVertical: 16, fontSize: 16 },
   switch: { color: C.muted, textAlign: "center", marginTop: 4 },
   legal: { color: C.dim, textAlign: "center", fontSize: 12, marginTop: 24 },
-});
+}));

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { User } from "../auth";
-import { C, R } from "../theme";
+import { C, R, themed } from "../theme";
 import { Button } from "../ui";
 
 const BUDGETS = [300, 500, 800, 1200];
@@ -41,7 +41,7 @@ export default function OnboardingScreen({ user, onDone }: { user: User; onDone:
         <View style={styles.chips}>
           {BUDGETS.map((b) => (
             <Pressable key={b} onPress={() => setBudget(String(b))} style={[styles.chip, budget === String(b) && styles.chipOn]}>
-              <Text style={[styles.chipText, budget === String(b) && { color: C.limeInk }]}>£{b}</Text>
+              <Text style={[styles.chipText, budget === String(b) && { color: C.onAccent }]}>£{b}</Text>
             </Pressable>
           ))}
         </View>
@@ -53,17 +53,17 @@ export default function OnboardingScreen({ user, onDone }: { user: User; onDone:
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { padding: 22, paddingTop: 90 },
   h1: { color: C.ink, fontSize: 32, fontWeight: "900", letterSpacing: -0.8, marginTop: 12 },
   sub: { color: C.muted, fontSize: 16, marginTop: 6 },
   label: { color: C.muted, fontWeight: "700", marginTop: 28, marginBottom: 8, textTransform: "uppercase", fontSize: 12, letterSpacing: 1 },
   input: { color: C.ink, fontSize: 18, fontWeight: "700", backgroundColor: C.card, borderRadius: R.md, padding: 16, borderWidth: 1, borderColor: C.line },
   budgetInput: { flexDirection: "row", alignItems: "center", backgroundColor: C.card, borderRadius: R.md, borderWidth: 1, borderColor: C.line, paddingLeft: 16 },
-  pound: { color: C.lime, fontSize: 22, fontWeight: "900", marginRight: 4 },
+  pound: { color: C.accentText, fontSize: 22, fontWeight: "900", marginRight: 4 },
   chips: { flexDirection: "row", gap: 8, marginTop: 12 },
   chip: { flex: 1, paddingVertical: 10, borderRadius: 999, backgroundColor: C.card, alignItems: "center", borderWidth: 1, borderColor: C.line },
-  chipOn: { backgroundColor: C.lime, borderColor: C.lime },
+  chipOn: { backgroundColor: C.accent, borderColor: C.accent },
   chipText: { color: C.ink, fontWeight: "800" },
   hint: { color: C.dim, marginTop: 14, lineHeight: 19 },
-});
+}));

@@ -6,7 +6,7 @@ import { buildCity, money } from "../city";
 import CityView from "../CityView";
 import { currentMonthKey, groupByMonth, monthLabel } from "../month";
 import type { InsightsByMonth } from "../storage";
-import { C, R } from "../theme";
+import { C, R, themed } from "../theme";
 import { Card, SectionTitle } from "../ui";
 import type { StoredReceipt } from "../types";
 
@@ -49,11 +49,11 @@ export default function HistoryScreen({ user, receipts, insights }: Props) {
                   styles.bar,
                   {
                     height: Math.max(4, (totals[i] / maxTotal) * 120),
-                    backgroundColor: k === curKey ? C.lime : budget && totals[i] > budget ? C.bad : C.violet,
+                    backgroundColor: k === curKey ? C.accent : budget && totals[i] > budget ? C.bad : C.accent2,
                   },
                 ]}
               />
-              <Text style={[styles.barMonth, k === curKey && { color: C.lime }]}>{monthLabel(k, true).split(" ")[0]}</Text>
+              <Text style={[styles.barMonth, k === curKey && { color: C.accentText }]}>{monthLabel(k, true).split(" ")[0]}</Text>
             </View>
           ))}
         </View>
@@ -110,7 +110,7 @@ export default function HistoryScreen({ user, receipts, insights }: Props) {
               <Card style={{ marginTop: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <Text style={{ fontSize: 34 }}>{insights[open].personality.emoji}</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.lime, fontWeight: "900" }}>{insights[open].personality.archetype}</Text>
+                  <Text style={{ color: C.accentText, fontWeight: "900" }}>{insights[open].personality.archetype}</Text>
                   <Text style={{ color: C.muted, marginTop: 2 }}>{insights[open].personality.tagline}</Text>
                 </View>
               </Card>
@@ -133,7 +133,7 @@ export default function HistoryScreen({ user, receipts, insights }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   h1: { color: C.ink, fontSize: 30, fontWeight: "900", letterSpacing: -0.8 },
   sub: { color: C.muted, marginTop: 6, lineHeight: 20 },
@@ -155,4 +155,4 @@ const styles = StyleSheet.create({
   modalHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 },
   close: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.card, alignItems: "center", justifyContent: "center" },
   rRow: { flexDirection: "row", alignItems: "center", backgroundColor: C.card, padding: 12, borderRadius: R.sm, marginBottom: 6 },
-});
+}));

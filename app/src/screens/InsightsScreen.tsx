@@ -5,7 +5,7 @@ import type { User } from "../auth";
 import { buildCity, money } from "../city";
 import { currentMonthKey, groupByMonth, monthLabel } from "../month";
 import { SAMPLE_INSIGHTS } from "../sampleData";
-import { C, R, necessityColor, necessityLabel } from "../theme";
+import { C, R, necessityColor, necessityLabel, themed } from "../theme";
 import { Bar, Button, Card, SectionTitle } from "../ui";
 import type { Insights, Necessity, StoredReceipt } from "../types";
 
@@ -161,7 +161,7 @@ function Stat({ label, value, color = C.ink }: { label: string; value: string; c
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, backgroundColor: C.bg },
   h1: { color: C.ink, fontSize: 30, fontWeight: "900", letterSpacing: -0.8 },
@@ -178,12 +178,12 @@ const styles = StyleSheet.create({
   legendRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   wait: { color: C.muted, textAlign: "center", marginTop: 10, fontSize: 12 },
-  personaCard: { marginTop: 22, alignItems: "center", backgroundColor: C.violetSoft, borderColor: C.violet },
+  personaCard: { marginTop: 22, alignItems: "center", backgroundColor: C.accent2Soft, borderColor: C.accent2 },
   youAre: { color: C.muted, marginTop: 6, fontSize: 11, fontWeight: "800", letterSpacing: 1.5 },
-  archetype: { fontSize: 26, fontWeight: "900", color: C.lime, textAlign: "center", marginTop: 4 },
+  archetype: { fontSize: 26, fontWeight: "900", color: C.accentText, textAlign: "center", marginTop: 4 },
   tagline: { fontStyle: "italic", color: C.ink, marginVertical: 10, textAlign: "center" },
   body: { color: C.ink, lineHeight: 21, opacity: 0.9 },
   itemTitle: { fontWeight: "800", color: C.ink, marginBottom: 3 },
   tipRow: { flexDirection: "row", gap: 12, alignItems: "center", paddingVertical: 8 },
   tipAmt: { color: C.good, fontWeight: "900" },
-});
+}));

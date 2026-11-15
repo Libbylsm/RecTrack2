@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { Ionicons } from "@expo/vector-icons";
 import type { User } from "../auth";
 import { computeGame, XP_PER_LEVEL } from "../game";
-import { C, R } from "../theme";
+import { C, R, themed } from "../theme";
 import { Bar, Button, Card, SectionTitle } from "../ui";
 import type { StoredReceipt } from "../types";
 
@@ -43,14 +43,14 @@ export default function ProfileScreen({ user, receipts, onUpdateUser, onSignOut,
       </View>
 
       <View style={styles.statsRow}>
-        <Stat value={`${game.xp}`} label="Total XP" color={C.violet} />
+        <Stat value={`${game.xp}`} label="Total XP" color={C.accent2} />
         <Stat value={`🔥 ${game.streak}`} label="Day streak" color={C.gold} />
         <Stat value={`${receipts.length}`} label="Receipts" />
       </View>
 
       <Card style={{ marginTop: 12 }}>
         <Text style={styles.cardLabel}>Level {game.level} → {game.level + 1}</Text>
-        <View style={{ marginVertical: 10 }}><Bar progress={game.levelProgress} color={C.violet} height={10} /></View>
+        <View style={{ marginVertical: 10 }}><Bar progress={game.levelProgress} color={C.accent2} height={10} /></View>
         <Text style={styles.cardSub}>{XP_PER_LEVEL - game.xpIntoLevel} XP to go · scan receipts, save with deals and finish quests to level up</Text>
       </Card>
 
@@ -58,7 +58,7 @@ export default function ProfileScreen({ user, receipts, onUpdateUser, onSignOut,
       <View style={styles.badges}>
         {game.achievements.map((a) => (
           <View key={a.id} style={[styles.badge, !a.unlocked && { opacity: 0.35 }]}>
-            <View style={[styles.badgeIcon, a.unlocked && { borderColor: C.lime }]}>
+            <View style={[styles.badgeIcon, a.unlocked && { borderColor: C.accent }]}>
               <Text style={{ fontSize: 26 }}>{a.unlocked ? a.icon : "🔒"}</Text>
             </View>
             <Text style={styles.badgeTitle} numberOfLines={1}>{a.title}</Text>
@@ -85,7 +85,7 @@ export default function ProfileScreen({ user, receipts, onUpdateUser, onSignOut,
               Alert.alert("Saved", `Monthly budget set to £${b}.`);
             }}
           >
-            <Text style={{ color: C.limeInk, fontWeight: "800" }}>Save</Text>
+            <Text style={{ color: C.onAccent, fontWeight: "800" }}>Save</Text>
           </Pressable>
         </View>
       </Card>
@@ -115,15 +115,15 @@ function Stat({ value, label, color = C.ink }: { value: string; label: string; c
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   head: { alignItems: "center", marginTop: 10 },
-  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: C.violet, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: C.lime },
+  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: C.accent2, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: C.accent },
   avatarText: { color: "#fff", fontSize: 38, fontWeight: "900" },
-  lvl: { position: "absolute", bottom: -6, right: -2, backgroundColor: C.lime, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 3, borderColor: C.bg },
-  lvlText: { color: C.limeInk, fontWeight: "900", fontSize: 13 },
+  lvl: { position: "absolute", bottom: -6, right: -2, backgroundColor: C.accent, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 3, borderColor: C.bg },
+  lvlText: { color: C.onAccent, fontWeight: "900", fontSize: 13 },
   name: { color: C.ink, fontSize: 26, fontWeight: "900", marginTop: 14 },
-  title: { color: C.lime, fontWeight: "800", marginTop: 2 },
+  title: { color: C.accentText, fontWeight: "800", marginTop: 2 },
   provider: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, backgroundColor: C.card, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   providerText: { color: C.muted, fontSize: 12 },
   statsRow: { flexDirection: "row", gap: 10, marginTop: 22 },
@@ -138,9 +138,9 @@ const styles = StyleSheet.create({
   badgeTitle: { color: C.ink, fontWeight: "800", fontSize: 11, marginTop: 6 },
   badgeDesc: { color: C.muted, fontSize: 10, textAlign: "center", marginTop: 2 },
   budgetRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 },
-  pound: { color: C.lime, fontSize: 22, fontWeight: "900" },
+  pound: { color: C.accentText, fontSize: 22, fontWeight: "900" },
   budgetInput: { flex: 1, color: C.ink, fontSize: 20, fontWeight: "800", backgroundColor: C.cardHi, borderRadius: R.sm, padding: 12 },
-  save: { backgroundColor: C.lime, borderRadius: R.sm, paddingVertical: 14, paddingHorizontal: 18 },
+  save: { backgroundColor: C.accent, borderRadius: R.sm, paddingVertical: 14, paddingHorizontal: 18 },
   reset: { color: C.bad, textAlign: "center", marginTop: 18, fontWeight: "700" },
   demoNote: { color: C.dim, textAlign: "center", fontSize: 11, marginTop: 14 },
-});
+}));

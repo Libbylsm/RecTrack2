@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, useColorScheme, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,7 +13,7 @@ import ProfileScreen from "./src/screens/ProfileScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import { InsightsByMonth, loadInsights, loadReceipts, saveInsights, saveReceipts } from "./src/storage";
-import { C } from "./src/theme";
+import { applyScheme, C, currentScheme, themed } from "./src/theme";
 import type { StoredReceipt } from "./src/types";
 
 type Tab = "home" | "insights" | "scan" | "history" | "profile";
@@ -26,6 +26,9 @@ const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof type
 ];
 
 export default function App() {
+  // Follow the phone's light/dark setting. Swapping the palette before rendering keeps every screen in sync.
+  const deviceScheme = useColorScheme();
+  applyScheme(deviceScheme === "light" ? "light" : "dark");
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState<Tab>("home");
@@ -48,6 +51,7 @@ export default function App() {
     });
   }, [user?.id]);
 
+  const scheme = currentScheme();
   if (booting) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
 
   const content = (() => {
@@ -116,13 +120,13 @@ export default function App() {
             t.key === "scan" ? (
               <Pressable key={t.key} style={styles.tab} onPress={() => setTab("scan")}>
                 <View style={[styles.scanBtn, tab === "scan" && { transform: [{ scale: 1.05 }] }]}>
-                  <Ionicons name="scan" size={26} color={C.limeInk} />
+                  <Ionicons name="scan" size={26} color={C.onAccent} />
                 </View>
               </Pressable>
             ) : (
               <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
-                <Ionicons name={tab === t.key ? t.iconOn : t.icon} size={23} color={tab === t.key ? C.lime : C.dim} />
-                <Text style={[styles.tabLabel, tab === t.key && { color: C.lime }]}>{t.label}</Text>
+                <Ionicons name={tab === t.key ? t.iconOn : t.icon} size={23} color={tab === t.key ? C.accent : C.dim} />
+                <Text style={[styles.tabLabel, tab === t.key && { color: C.accentText }]}>{t.label}</Text>
               </Pressable>
             ),
           )}
@@ -133,22 +137,22 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      {content}
+      <StatusBar style={scheme === "light" ? "dark" : "light"} />
+      <View key={scheme} style={{ flex: 1, backgroundColor: C.bg }}>{content}</View>
     </SafeAreaProvider>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() => ({
   tabBar: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#121318",
+    flexDirection: "row", alignItems: "center", backgroundColor: C.tabBar,
     borderTopWidth: 1, borderTopColor: C.line, paddingTop: 6,
   },
   tab: { flex: 1, alignItems: "center", paddingBottom: 4 },
   tabLabel: { fontSize: 10, fontWeight: "700", color: C.dim, marginTop: 3 },
   scanBtn: {
-    width: 58, height: 58, borderRadius: 20, backgroundColor: C.lime, alignItems: "center", justifyContent: "center",
+    width: 58, height: 58, borderRadius: 20, backgroundColor: C.accent, alignItems: "center", justifyContent: "center",
     marginTop: -26, borderWidth: 4, borderColor: C.bg,
-    shadowColor: C.lime, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
+    shadowColor: C.accent, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
   },
-});
+}));
