@@ -1,4 +1,4 @@
-# Receipt Roulette 🎰🧾🏙️
+# RecTrack 🎰🧾🏙️
 
 Snap your receipts → an AI vision model reads every line → your spending grows a virtual city.
 Impulse buys build factories and smog; essentials and savings plant trees.
