@@ -61,23 +61,25 @@ export function buildScore(city: CityState): Score {
 }
 
 /** Self-contained Web Audio page. The play button lives inside it so iOS accepts the tap as a user gesture. */
-export function buildHtml(c: { card: string; line: string; lime: string; limeInk: string; ink: string; muted: string }) {
+export function buildHtml(c: { bg: string; accent: string; onAccent: string; ink: string; muted: string }) {
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
-html,body{height:100%;background:${c.card};font-family:-apple-system,system-ui,sans-serif;overflow:hidden}
-#b{display:flex;align-items:center;gap:12px;width:100%;height:100%;padding:0 14px;border:1px solid ${c.line};border-radius:16px;background:${c.card};color:${c.ink};text-align:left;font:inherit}
-#ic{width:34px;height:34px;border-radius:10px;background:${c.lime};color:${c.limeInk};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
-#t{font-weight:800;font-size:14px}
-#s{font-size:12px;color:${c.muted};margin-top:2px}
-.eq{margin-left:auto;display:flex;gap:3px;align-items:flex-end;height:18px}
-.eq i{width:3px;background:${c.lime};height:4px;border-radius:2px}
+html,body{height:100%;background:transparent;font-family:-apple-system,system-ui,sans-serif;overflow:hidden}
+#b{display:flex;align-items:center;gap:12px;width:100%;height:100%;padding:0 12px;border:0;border-radius:18px;background:${c.bg};color:${c.ink};text-align:left;font:inherit}
+#ic{width:42px;height:42px;flex-shrink:0;border-radius:21px;background:${c.accent};color:${c.onAccent};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+#k{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:${c.muted}}
+#t{font-weight:800;font-size:14px;margin-top:1px}
+#s{font-size:12px;color:${c.muted};margin-top:1px}
+.eq{margin-left:auto;display:flex;gap:3px;align-items:flex-end;height:20px}
+.eq i{width:3px;background:${c.accent};height:4px;border-radius:2px}
 .on .eq i{animation:e .6s ease-in-out infinite alternate}
 .on .eq i:nth-child(2){animation-delay:.15s}
 .on .eq i:nth-child(3){animation-delay:.3s}
-@keyframes e{to{height:18px}}
+.on .eq i:nth-child(4){animation-delay:.45s}
+@keyframes e{to{height:20px}}
 </style></head><body>
-<button id="b"><div id="ic">&#9654;</div><div><div id="t">Hear your city</div><div id="s">Scan a receipt to compose</div></div><div class="eq"><i></i><i></i><i></i></div></button>
+<button id="b"><div id="ic">&#9654;</div><div><div id="k">Now playing</div><div id="t">Your city's soundtrack</div><div id="s">Scan a receipt to compose</div></div><div class="eq"><i></i><i></i><i></i><i></i></div></button>
 <script>
 var b=document.getElementById('b'),ic=document.getElementById('ic'),s=document.getElementById('s');
 var S=null,ctx=null,master,filt,droneG,hissG,nb,playing=false,timer=null,step=0,nextTime=0;

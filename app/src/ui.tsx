@@ -42,6 +42,53 @@ export function Ring({
   );
 }
 
+/** Budget ring drawn as a vinyl record: progress arc outside, grooves and an accent label inside. */
+export function Vinyl({
+  size = 112, progress, color = C.accent, children,
+}: { size?: number; progress: number; color?: string; children?: ReactNode }) {
+  const c = size / 2;
+  const stroke = 6;
+  const r = c - stroke / 2 - 1;
+  const circ = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(1, progress));
+  const disc = r - stroke / 2 - 4;
+  return (
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <Circle cx={c} cy={c} r={r} stroke={C.line} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={c} cy={c} r={r} stroke={color} strokeWidth={stroke} fill="none"
+          strokeDasharray={`${circ} ${circ}`} strokeDashoffset={circ * (1 - p)} strokeLinecap="round"
+          transform={`rotate(-90 ${c} ${c})`}
+        />
+        <Circle cx={c} cy={c} r={disc} fill={C.vinyl} />
+        {[0.88, 0.75, 0.62].map((k) => (
+          <Circle key={k} cx={c} cy={c} r={disc * k} stroke={C.groove} strokeWidth={1} fill="none" />
+        ))}
+        <Circle cx={c} cy={c} r={disc * 0.47} fill={color} />
+        <Circle cx={c} cy={c} r={2.5} fill={C.vinyl} />
+      </Svg>
+      {children}
+    </View>
+  );
+}
+
+/** XP progress as a row of equaliser "beats". */
+export function BeatBar({ progress, color = C.accent, beats = 20 }: { progress: number; color?: string; beats?: number }) {
+  const lit = Math.round(Math.max(0, Math.min(1, progress)) * beats);
+  const heights = [10, 16, 22, 14, 18, 22, 12, 20, 16, 22];
+  return (
+    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 3, height: 22 }}>
+      {Array.from({ length: beats }).map((_, i) => (
+        <View
+          key={i}
+          style={{ flex: 1, height: heights[i % heights.length], borderRadius: 2, backgroundColor: i < lit ? color : C.line }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function Bar({ progress, color = C.accent, height = 8 }: { progress: number; color?: string; height?: number }) {
   return (
     <View style={{ height, backgroundColor: C.line, borderRadius: height / 2, overflow: "hidden" }}>

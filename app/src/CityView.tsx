@@ -2,11 +2,76 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { buildCity, District, money, skyColors } from "./city";
+import Svg, { Circle, G, Rect } from "react-native-svg";
+import { buildCity, CityState, District, money } from "./city";
 import { C, R, necessityColor, themed } from "./theme";
-import { Bar } from "./ui";
 import type { StoredReceipt } from "./types";
 import CityMusic from "./CityMusic";
+
+// Slots along the street: [x, width]. Districts fill the front row by spend; the rest is background skyline.
+const FRONT: [number, number][] = [[120, 34], [226, 32], [30, 30], [160, 30], [264, 30], [66, 28], [300, 28]];
+const BACK: [number, number, number][] = [[8, 26, 78], [96, 22, 100], [196, 24, 86], [326, 22, 70]];
+const TREE_X = [22, 106, 205, 318, 160, 290, 62, 250, 140, 340];
+
+/** The month's city as a skyline: rooftops are equaliser bars, essentials plant trees, impulse adds smog. */
+function Skyline({ city }: { city: CityState }) {
+  const maxSpend = Math.max(1, ...city.districts.map((d) => d.spend));
+  const front = FRONT.map(([x, w], i) => {
+    const d = city.districts[i];
+    const h = d ? 46 + (d.spend / maxSpend) * 80 : 28; // empty plots stay low
+    const factory = !!d && d.impulseSpend / Math.max(d.spend, 1) > 0.3;
+    return { x, w, h, d, factory };
+  });
+  const trees = TREE_X.slice(0, Math.max(city.districts.length ? 2 : 0, city.trees));
+  return (
+    <Svg width="100%" height={150} viewBox="0 0 354 170" preserveAspectRatio="xMidYMax meet">
+      <Circle cx={300} cy={34} r={14} fill={C.moon} opacity={city.health >= 50 ? 1 : 0.4} />
+      <Circle cx={306} cy={30} r={12} fill={C.skyTop} opacity={city.health >= 50 ? 1 : 0.4} />
+      {city.health >= 50 && (
+        <G fill={C.note}>
+          <Circle cx={58} cy={30} r={3.5} />
+          <Rect x={60.5} y={14} width={1.6} height={16} />
+          <Circle cx={210} cy={22} r={3} />
+          <Circle cx={226} cy={28} r={3} />
+          <Rect x={212} y={9} width={1.4} height={13} />
+          <Rect x={228} y={15} width={1.4} height={13} />
+          <Rect x={212} y={9} width={17.4} height={1.6} />
+        </G>
+      )}
+      {BACK.map(([x, w, h]) => (
+        <Rect key={x} x={x} y={170 - h} width={w} height={h} rx={3} fill={C.bldgBack} />
+      ))}
+      {front.map(({ x, w, h, d, factory }) => (
+        <G key={x}>
+          {factory && <Rect x={x + w - 9} y={170 - h - 14} width={6} height={14} fill={C.bldg} />}
+          <Rect x={x} y={170 - h} width={w} height={h} rx={4} fill={C.bldg} />
+          {d && <Rect x={x} y={170 - h - 8} width={w} height={4} rx={2} fill={C.eq} />}
+          {d && d.level >= 3 && <Rect x={x} y={170 - h - 16} width={w} height={4} rx={2} fill={C.eq} opacity={0.55} />}
+          {d &&
+            Array.from({ length: Math.min(6, Math.floor(h / 22)) }).map((_, r) => (
+              <Rect
+                key={r}
+                x={x + (r % 2 ? w - 13 : 7)}
+                y={170 - h + 10 + r * 16}
+                width={6}
+                height={7}
+                rx={1}
+                fill={C.windowLit}
+                opacity={factory && r % 2 ? 0.35 : 0.9}
+              />
+            ))}
+        </G>
+      ))}
+      {trees.map((x) => (
+        <G key={x}>
+          <Rect x={x - 1.5} y={150} width={3} height={16} fill={C.trunk} />
+          <Circle cx={x} cy={144} r={10} fill={C.leaf} />
+        </G>
+      ))}
+      <Rect x={0} y={164} width={354} height={6} fill={C.ground} />
+    </Svg>
+  );
+}
 
 function PopIn({ children, delay }: { children: React.ReactNode; delay: number }) {
   const scale = useRef(new Animated.Value(0)).current;
@@ -34,7 +99,6 @@ function Drift({ children, offset }: { children: React.ReactNode; offset: number
 /** The virtual city for one set of receipts (normally one month). */
 export default function CityView({ receipts, title = "Receiptopolis" }: { receipts: StoredReceipt[]; title?: string }) {
   const city = useMemo(() => buildCity(receipts), [receipts]);
-  const [top, bottom] = skyColors(city.health);
   const [open, setOpen] = useState<District | null>(null);
   const healthLabel =
     city.health >= 75 ? "Clear skies" : city.health >= 50 ? "Hazy" : city.health >= 25 ? "Smoggy" : "Choking";
@@ -42,27 +106,32 @@ export default function CityView({ receipts, title = "Receiptopolis" }: { receip
 
   return (
     <View>
-      <LinearGradient colors={[top, bottom]} style={styles.sky}>
-        <View style={styles.skyRow}>
-          <Text style={{ fontSize: 34, opacity: city.health >= 50 ? 1 : 0.35 }}>☀️</Text>
-          {Array.from({ length: city.pollution }).map((_, i) => (
-            <Drift key={i} offset={i}>
-              <Text style={{ fontSize: 26 }}>☁️</Text>
-            </Drift>
-          ))}
+      <LinearGradient colors={[C.skyTop, C.skyBottom]} style={styles.sky}>
+        <View style={styles.skyHead}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.skyLabel}>Impulse {Math.round(city.impulseShare * 100)}% · {city.trees} trees</Text>
+            <Text style={styles.cityTitle} numberOfLines={1}>{title}</Text>
+          </View>
+          <View style={[styles.airPill, { backgroundColor: healthColor + "26" }]}>
+            <Ionicons name="leaf" size={13} color={healthColor} />
+            <Text style={[styles.airText, { color: healthColor }]}>{healthLabel} · {city.health}</Text>
+          </View>
         </View>
-        <Text style={styles.cityTitle}>{title}</Text>
-        <View style={styles.airRow}>
-          <Ionicons name="leaf" size={14} color={healthColor} />
-          <Text style={[styles.airText, { color: healthColor }]}>{healthLabel} · {city.health}/100</Text>
-          <Text style={styles.airMeta}>Impulse {Math.round(city.impulseShare * 100)}%</Text>
+
+        <View>
+          <Skyline city={city} />
+          {/* Smog drifts over the skyline, one cloud per impulse-heavy step */}
+          <View style={styles.smogLayer} pointerEvents="none">
+            {Array.from({ length: city.pollution }).map((_, i) => (
+              <Drift key={i} offset={i}>
+                <View style={[styles.smog, { width: 34 + (i % 3) * 10, marginTop: (i % 2) * 14 }]} />
+              </Drift>
+            ))}
+          </View>
         </View>
-        <View style={{ marginTop: 8 }}>
-          <Bar progress={city.health / 100} color={healthColor} height={6} />
-        </View>
-        <Text style={styles.trees}>{"🌳".repeat(city.trees) || " "}</Text>
+
+        <CityMusic city={city} />
       </LinearGradient>
-      <CityMusic city={city} />
 
       {receipts.length === 0 ? (
         <View style={styles.empty}>
@@ -140,15 +209,16 @@ function DistrictDetail({
 }
 
 const styles = themed(() => ({
-  sky: { borderRadius: R.lg, padding: 16, overflow: "hidden" },
-  skyRow: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 40, flexWrap: "wrap" },
-  cityTitle: { fontSize: 24, fontWeight: "900", color: "#fff", marginTop: 4, letterSpacing: -0.5 },
-  airRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
-  airText: { fontWeight: "800", fontSize: 13 },
-  airMeta: { color: "rgba(255,255,255,0.7)", fontSize: 13, marginLeft: "auto" },
-  trees: { fontSize: 20, marginTop: 8, letterSpacing: 2 },
+  sky: { borderRadius: R.lg, padding: 14, paddingTop: 16, overflow: "hidden", borderWidth: 1, borderColor: C.line },
+  skyHead: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 4 },
+  skyLabel: { color: C.skyMuted, fontSize: 11, fontWeight: "800", letterSpacing: 0.8, textTransform: "uppercase" },
+  cityTitle: { fontSize: 24, fontWeight: "900", color: C.skyInk, marginTop: 2, letterSpacing: -0.5 },
+  airPill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  airText: { fontWeight: "800", fontSize: 12 },
+  smogLayer: { position: "absolute", top: 18, left: 0, right: 0, flexDirection: "row", flexWrap: "wrap", gap: 18, paddingHorizontal: 20 },
+  smog: { height: 16, borderRadius: 8, backgroundColor: C.smog },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 },
-  plot: { width: "48.4%", backgroundColor: C.card, borderRadius: R.md, borderWidth: 1, borderColor: C.line, padding: 10 },
+  plot: { width: "48.4%", backgroundColor: C.card, borderRadius: R.md, borderWidth: 1, borderColor: C.line, padding: 10, paddingTop: 12 },
   plotHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   landmarkBubble: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   plotName: { fontWeight: "800", color: C.ink, fontSize: 13 },

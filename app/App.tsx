@@ -18,7 +18,7 @@ import type { StoredReceipt } from "./src/types";
 
 type Tab = "home" | "insights" | "scan" | "history" | "profile";
 const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof typeof Ionicons.glyphMap; label: string }[] = [
-  { key: "home", icon: "home-outline", iconOn: "home", label: "Home" },
+  { key: "home", icon: "business-outline", iconOn: "business", label: "City" },
   { key: "insights", icon: "stats-chart-outline", iconOn: "stats-chart", label: "Insights" },
   { key: "scan", icon: "scan", iconOn: "scan", label: "Scan" },
   { key: "history", icon: "time-outline", iconOn: "time", label: "History" },
@@ -126,7 +126,7 @@ export default function App() {
               </Pressable>
             ) : (
               <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
-                <Ionicons name={tab === t.key ? t.iconOn : t.icon} size={23} color={tab === t.key ? C.accent : C.dim} />
+                <Ionicons name={tab === t.key ? t.iconOn : t.icon} size={23} color={tab === t.key ? C.accentText : C.dim} />
                 <Text style={[styles.tabLabel, tab === t.key && { color: C.accentText }]}>{t.label}</Text>
               </Pressable>
             ),
@@ -152,8 +152,8 @@ const styles = themed(() => ({
   tab: { flex: 1, alignItems: "center", paddingBottom: 4 },
   tabLabel: { fontSize: 10, fontWeight: "700", color: C.dim, marginTop: 3 },
   scanBtn: {
-    width: 58, height: 58, borderRadius: 20, backgroundColor: C.accent, alignItems: "center", justifyContent: "center",
-    marginTop: -26, borderWidth: 4, borderColor: C.bg,
-    shadowColor: C.accent, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
+    width: 60, height: 60, borderRadius: 30, backgroundColor: C.accent, alignItems: "center", justifyContent: "center",
+    marginTop: -28, borderWidth: 4, borderColor: C.bg,
+    shadowColor: C.accent, shadowOpacity: C.bg === "#0B0C0C" ? 0.6 : 0.35, shadowRadius: 16, shadowOffset: { width: 0, height: 6 },
   },
 }));

@@ -15,7 +15,7 @@ export default function CityMusic({ city }: { city: CityState }) {
   const loaded = useRef(false);
   const score = useMemo(() => buildScore(city), [city]);
   const html = useMemo(
-    () => buildHtml({ card: C.card, line: C.line, lime: C.lime, limeInk: C.limeInk, ink: C.ink, muted: C.muted }),
+    () => buildHtml({ bg: C.player, accent: C.accent, onAccent: C.onAccent, ink: C.ink, muted: C.muted }),
     [],
   );
   const js = `window.setScore&&window.setScore(${JSON.stringify(score)});true;`;
@@ -27,7 +27,7 @@ export default function CityMusic({ city }: { city: CityState }) {
 
   if (city.districts.length === 0) return null;
   return (
-    <View style={{ height: 56, marginTop: 10, borderRadius: 16, overflow: "hidden" }}>
+    <View style={{ height: 66, marginTop: 10, borderRadius: 18, overflow: "hidden" }}>
       <WebView
         ref={ref}
         originWhitelist={["*"]}

@@ -8,7 +8,7 @@ import CityView from "../CityView";
 import { computeGame, XP_PER_LEVEL } from "../game";
 import { currentMonthKey, daysLeftInMonth, groupByMonth, monthLabel } from "../month";
 import { C, R, themed } from "../theme";
-import { Bar, Card, Pill, Ring, SectionTitle } from "../ui";
+import { Bar, BeatBar, Card, Pill, SectionTitle, Vinyl } from "../ui";
 import type { StoredReceipt } from "../types";
 
 interface Props {
@@ -44,10 +44,10 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.hello}>Hi, {user.name} 👋</Text>
-          <Text style={styles.helloSub}>Mayor of Receiptopolis</Text>
+          <Text style={styles.helloSub}>Conductor of Receiptopolis</Text>
         </View>
         <Pill icon="🔥" text={`${game.streak}`} color={C.gold} />
-        <Pill icon="⚡" text={`Lv ${game.level}`} color={C.accent} />
+        <Pill icon="🎵" text={`Lv ${game.level}`} color={C.accentText} bg={C.accentSoft} />
       </View>
 
       {/* Hero: this month's spending */}
@@ -67,13 +67,15 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
           <View style={styles.heroPills}>
             <Pill text={`${cur.length} receipts`} />
             <Pill text={`${daysLeft}d left`} />
-            {city.totalSavings > 0 && <Pill text={`Saved ${money(city.totalSavings, city.currency)}`} color={C.good} />}
+            {city.totalSavings > 0 && (
+              <Pill text={`Saved ${money(city.totalSavings, city.currency)}`} color={C.good} bg={C.goodSoft} />
+            )}
           </View>
         </View>
-        <Ring size={108} stroke={11} progress={used} color={over ? C.bad : used > 0.8 ? C.warn : C.accent}>
+        <Vinyl size={112} progress={used} color={over ? C.bad : used > 0.8 ? C.warn : C.accent}>
           <Text style={styles.ringPct}>{budget ? Math.round(used * 100) : 0}%</Text>
           <Text style={styles.ringSub}>of £{budget}</Text>
-        </Ring>
+        </Vinyl>
       </LinearGradient>
 
       {/* New-month banner */}
@@ -104,30 +106,34 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
           </View>
           <Text style={styles.xpTotal}>{game.xp} XP</Text>
         </View>
-        <View style={{ marginTop: 12 }}>
-          <Bar progress={game.levelProgress} color={C.accent2} height={10} />
+        <View style={{ marginTop: 14 }}>
+          <BeatBar progress={game.levelProgress} />
         </View>
       </Card>
 
-      {/* Quests */}
+      {/* Quests, shown as a tracklist */}
       <SectionTitle title="Monthly quests" />
-      <View style={{ gap: 10 }}>
-        {game.quests.map((q) => (
-          <Card key={q.id} style={styles.quest}>
-            <View style={[styles.questIcon, q.done && { backgroundColor: C.accent }]}>
-              <Ionicons name={q.done ? "checkmark" : (q.icon as any)} size={20} color={q.done ? C.onAccent : C.accent} />
+      <Card style={styles.tracklist}>
+        {game.quests.map((q, i) => (
+          <View key={q.id} style={[styles.quest, i < game.quests.length - 1 && styles.questDivider]}>
+            <View style={styles.trackNum}>
+              {q.done ? (
+                <Ionicons name="checkmark-circle" size={22} color={C.good} />
+              ) : (
+                <Text style={styles.trackNumText}>{String(i + 1).padStart(2, "0")}</Text>
+              )}
             </View>
-            <View style={{ flex: 1, gap: 8 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <View style={{ flex: 1, gap: 7 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
                 <Text style={styles.questTitle}>{q.title}</Text>
                 <Text style={styles.questXp}>+{q.xp} XP</Text>
               </View>
-              <Bar progress={q.progress} color={q.done ? C.accent : C.accent2} height={6} />
+              <Bar progress={q.progress} color={q.done ? C.good : C.accent} height={6} />
               <Text style={styles.questLabel}>{q.label}</Text>
             </View>
-          </Card>
+          </View>
         ))}
-      </View>
+      </Card>
 
       {/* City */}
       <SectionTitle title="Your city this month" action="History" onAction={() => goTo("history")} />
@@ -158,28 +164,31 @@ export default function HomeScreen({ user, receipts, goTo }: Props) {
 const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   topBar: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.accent2, alignItems: "center", justifyContent: "center" },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#fff", fontWeight: "900", fontSize: 18 },
   hello: { color: C.ink, fontWeight: "800", fontSize: 17 },
   helloSub: { color: C.muted, fontSize: 12, marginTop: 1 },
-  hero: { borderRadius: R.lg, padding: 20, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: C.heroBorder },
+  hero: { borderRadius: R.lg, padding: 20, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: C.accentSoft },
   heroLabel: { color: C.muted, fontWeight: "700", fontSize: 13, textTransform: "uppercase", letterSpacing: 1 },
   heroTotal: { color: C.ink, fontSize: 40, fontWeight: "900", letterSpacing: -1.5, marginTop: 4 },
   heroMeta: { color: C.accentText, fontWeight: "700", marginTop: 2 },
   heroPills: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 12 },
-  ringPct: { color: C.ink, fontSize: 22, fontWeight: "900" },
-  ringSub: { color: C.muted, fontSize: 11, fontWeight: "600" },
+  ringPct: { color: C.onAccent, fontSize: 15, fontWeight: "900" },
+  ringSub: { color: C.onAccent, fontSize: 8, fontWeight: "700", opacity: 0.9 },
   banner: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 14, borderColor: C.accent },
   bannerTitle: { color: C.ink, fontWeight: "800" },
   bannerText: { color: C.muted, marginTop: 2, fontSize: 13 },
   levelRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  levelBadge: { width: 44, height: 44, borderRadius: 14, backgroundColor: C.accent2Soft, borderWidth: 2, borderColor: C.accent2, alignItems: "center", justifyContent: "center" },
+  levelBadge: { width: 44, height: 44, borderRadius: 14, backgroundColor: C.accentSoft, borderWidth: 2, borderColor: C.accent, alignItems: "center", justifyContent: "center" },
   levelNum: { color: C.ink, fontWeight: "900", fontSize: 18 },
   levelTitle: { color: C.ink, fontWeight: "800", fontSize: 16 },
   levelSub: { color: C.muted, fontSize: 12, marginTop: 2 },
-  xpTotal: { color: C.accent2, fontWeight: "900" },
-  quest: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14 },
-  questIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.cardHi, alignItems: "center", justifyContent: "center" },
+  xpTotal: { color: C.accentText, fontWeight: "900" },
+  tracklist: { padding: 0, overflow: "hidden" },
+  quest: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
+  questDivider: { borderBottomWidth: 1, borderBottomColor: C.line },
+  trackNum: { width: 26, alignItems: "center" },
+  trackNumText: { color: C.accentText, fontWeight: "900", fontSize: 14, fontVariant: ["tabular-nums"] },
   questTitle: { color: C.ink, fontWeight: "700", flex: 1 },
   questXp: { color: C.gold, fontWeight: "800", fontSize: 12 },
   questLabel: { color: C.muted, fontSize: 12 },

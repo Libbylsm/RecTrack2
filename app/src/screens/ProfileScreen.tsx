@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { User } from "../auth";
 import { computeGame, XP_PER_LEVEL } from "../game";
 import { C, R, themed } from "../theme";
-import { Bar, Button, Card, SectionTitle } from "../ui";
+import { BeatBar, Button, Card, SectionTitle } from "../ui";
 import type { StoredReceipt } from "../types";
 
 interface Props {
@@ -43,14 +43,14 @@ export default function ProfileScreen({ user, receipts, onUpdateUser, onSignOut,
       </View>
 
       <View style={styles.statsRow}>
-        <Stat value={`${game.xp}`} label="Total XP" color={C.accent2} />
+        <Stat value={`${game.xp}`} label="Total XP" color={C.accentText} />
         <Stat value={`🔥 ${game.streak}`} label="Day streak" color={C.gold} />
         <Stat value={`${receipts.length}`} label="Receipts" />
       </View>
 
       <Card style={{ marginTop: 12 }}>
         <Text style={styles.cardLabel}>Level {game.level} → {game.level + 1}</Text>
-        <View style={{ marginVertical: 10 }}><Bar progress={game.levelProgress} color={C.accent2} height={10} /></View>
+        <View style={{ marginVertical: 12 }}><BeatBar progress={game.levelProgress} /></View>
         <Text style={styles.cardSub}>{XP_PER_LEVEL - game.xpIntoLevel} XP to go · scan receipts, save with deals and finish quests to level up</Text>
       </Card>
 
@@ -118,7 +118,7 @@ function Stat({ value, label, color = C.ink }: { value: string; label: string; c
 const styles = themed(() => ({
   wrap: { padding: 18, paddingBottom: 120 },
   head: { alignItems: "center", marginTop: 10 },
-  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: C.accent2, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: C.accent },
+  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: C.accentSoft },
   avatarText: { color: "#fff", fontSize: 38, fontWeight: "900" },
   lvl: { position: "absolute", bottom: -6, right: -2, backgroundColor: C.accent, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 3, borderColor: C.bg },
   lvlText: { color: C.onAccent, fontWeight: "900", fontSize: 13 },

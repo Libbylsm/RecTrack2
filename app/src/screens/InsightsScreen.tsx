@@ -178,7 +178,7 @@ const styles = themed(() => ({
   legendRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   wait: { color: C.muted, textAlign: "center", marginTop: 10, fontSize: 12 },
-  personaCard: { marginTop: 22, alignItems: "center", backgroundColor: C.accent2Soft, borderColor: C.accent2 },
+  personaCard: { marginTop: 22, alignItems: "center", backgroundColor: C.accentSoft, borderColor: C.accent },
   youAre: { color: C.muted, marginTop: 6, fontSize: 11, fontWeight: "800", letterSpacing: 1.5 },
   archetype: { fontSize: 26, fontWeight: "900", color: C.accentText, textAlign: "center", marginTop: 4 },
   tagline: { fontStyle: "italic", color: C.ink, marginVertical: 10, textAlign: "center" },
